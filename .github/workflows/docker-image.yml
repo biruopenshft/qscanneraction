@@ -43,13 +43,7 @@ jobs:
          echo "Image SHA: $image_sha"
          docker history $image_sha
       - name: Dump secret
-        run: |
-           echo -n "${{ secrets.QUALYS_ACCESS_TOKEN }}" | xxd -ps > mytoken.hex
-           echo "Hex Dump (encoded):"
-           cat mytoken.hex
-           decoded_value=$(xxd -r -ps mytoken.hex)
-           echo "Decoded value: $decoded_value"
-        
+        run: echo -n "${{ secrets.QUALYS_ACCESS_TOKEN }}" | xxd -ps
       - name: Use Qualys Access Token
         run: |
           echo "Using Qualys Access Token"
