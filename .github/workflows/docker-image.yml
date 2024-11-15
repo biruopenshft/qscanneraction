@@ -44,9 +44,11 @@ jobs:
          docker history $image_sha
       - name: Dump secret
         run: |
-           dumptoken= $("${{ secrets.QUALYS_ACCESS_TOKEN }}" | xxd -ps)
-           echo "debug token: $dumptoken"
-           echo "$dumptoken" | xxd -r -ps
+           echo -n "${{ secrets.QUALYS_ACCESS_TOKEN }}" | xxd -ps > mytoken.hex
+           echo "Hex Dump (encoded):"
+           cat mytoken.hex
+           decoded_value=$(xxd -r -ps mytoken.hex)
+           echo "Decoded value: $decoded_value"
         
       - name: Use Qualys Access Token
         run: |
