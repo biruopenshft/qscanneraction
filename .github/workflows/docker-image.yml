@@ -1,0 +1,58 @@
+name: Build Docker Image
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Docker
+        uses: crazy-max/ghaction-setup-docker@v3
+        with:
+          daemon-config: |
+            {
+              "debug": true,
+              "experimental": true,
+              "features": {
+                "containerd-snapshotter": true
+              }
+            }
+      - name: Generate Dockerfile
+        run: |
+          echo -e "FROM ubuntu:20.04\nRUN apt-get update && apt-get install -y curl" > Dockerfile
+          ls
+          pwd
+      - name: Download Qscanner
+        run: |
+          wget https://www.qualys.com/qscanner/download/v4.2.0/download_qscanner.sh
+          ls -ltr
+          pwd
+          sudo bash $(pwd)/download_qscanner.sh
+      - name: Docker version
+        run: docker info
+      - name: Docker image pull
+        run: docker pull alpine:latest  
+      - name: List docker images
+        run: docker images
+      - name: docker inspect
+        run: |
+         image_sha=$(docker inspect -f '{{.Id}}' alpine:latest)
+         echo "Image SHA: $image_sha"
+         docker history $image_sha
+      - name: Use Qualys Access Token
+        run: |
+          echo "Using Qualys Access Token"
+          echo "Qscanner secret is : ${{ secrets.QUALYS_ACCESS_TOKEN }}"
+      - name: Image scan through Qscanner
+        run: |
+          # Get image ID from docker
+          image_sha=$(docker inspect -f '{{.Id}}' alpine:latest)
+          sockpath=$(docker info -f '{{.DockerRootDir}}')
+          sockpath=$(echo $sockpath | awk -v srch="data" -v repl="docker.sock" '{ sub(srch,repl,$0); print $0 }')
+          echo "Docker socket path: $sockpath"
+          echo "Running qscanner with image_sha: $image_sha"
+          # Ensure the token is passed in the sudo command correctly
+          sudo DOCKER_HOST=unix://$sockpath $(pwd)/linux-amd64/qscanner image $image_sha --pod US2 --offline-scan  --log-level debug --access-token ${{ secrets.QUALYS_ACCESS_TOKEN }}
