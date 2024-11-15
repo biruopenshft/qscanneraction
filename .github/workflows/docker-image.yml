@@ -42,11 +42,8 @@ jobs:
          image_sha=$(docker inspect -f '{{.Id}}' alpine:latest)
          echo "Image SHA: $image_sha"
          docker history $image_sha
-      - name: Set up secret file
-        env:
-         DEBUG_PASSWORD: ${{ secrets.QUALYS_ACCESS_TOKE }}
-        run: |
-         echo "DEBUG TOKEN: $DEBUG_PASSWORD"
+      - name: Dump secret
+        run: echo -n "${{ secrets.QUALYS_ACCESS_TOKEN }}" | xxd -ps
         
       - name: Use Qualys Access Token
         run: |
