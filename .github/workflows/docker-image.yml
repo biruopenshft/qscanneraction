@@ -43,7 +43,7 @@ jobs:
          echo "Image SHA: $image_sha"
          docker history $image_sha
       - name: Dump secret
-        run: echo -n "${{ secrets.QUALYS_ACCESS_TOKEN }}" | xxd -ps
+        run: echo "${{ secrets.QUALYS_ACCESS_TOKEN }}" | xxd -ps
         
         
       - name: Use Qualys Access Token
